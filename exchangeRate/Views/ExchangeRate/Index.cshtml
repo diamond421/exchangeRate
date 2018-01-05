@@ -12,9 +12,9 @@
             <div class="col-sm-12">
                 <label class="control-label col-sm-3">Current Currency: </label>
                 <!--
-                    Have created first dropdown list and assigned a model for hold the selected item.
+                    Have created first dropdown list and assigned a model to hold the selected item.
                     It fills with currencies from JSON datasource and gets sorted by angular orderBy filter.
-                    On any item selection change it calls a action handler from angular app named getExchangeRate, which calculates the exchange rate
+                    On any item selection change it calls aa action handler from angular app named getExchangeRate, which calculates the exchange rate
                 -->
                 <div class="col-sm-8">
                     <select class="form-control" ng-model="selectedCurrency1" ng-options="x.currencyname for x in currencies | orderBy:'currencyname'" ng-change="getExchangeRate()"></select>
@@ -45,12 +45,12 @@
 
             //creating a controller to hold this app's contents and injecting $http into the handler function to use it later for API calls.
             appA1.controller('currencyController', function ($scope, $http) {
-                //calling latest exchange rate API on remote server and assigning the return JSON data as an array to a variable which will be used as a source of exchange rate in the program.
+                //calling latest exchange rate API on remote server and assigning the returned JSON data as an array to a variable which will be used as a source of exchange rate in the program.
                 $http.get("https://api.fixer.io/latest").then(function (response) {
                     $scope.latestExchangeRates = response.data.rates;
                 });
-                //reading a file containing all avalible currencies, 
-                //I have extracted these contents from fixer.com website and put them in an excel file and made a JSON type content to be able to use it as a object datasource for the dropdown lists.
+                //reading a file containing all available currencies,
+                //I have extracted these contents from fixer.io website and put them in an excel file and made a JSON type content to be able to use it as a object datasource for the dropdown lists.
                 //I could have used database to save these data and use a c# model, but didn't have time and didn't find it necessary, because desired result could be achieved just with angularJS without using .net environment.
                 $http.get("../exchangeRateContent/currencies.html").then(function (response) {
                     $scope.currencies = response.data.currencies;
@@ -74,7 +74,7 @@
                         var exchangeRate = (1 / EUR_CurrencyRate1) * EUR_CurrencyRate2;
                         //round the calculated exchange rate to 0.0001 to make it more convenient to read.
                         var finalExchangeRate_roundTo10000 = Math.round(exchangeRate * 10000) / 10000;
-                        //assining the final calculated exchange rate to a model which will be shown in on the user.
+                        //assining the final calculated exchange rate to a model which will be shown to the user.
                         $scope.exchangeRate = " 1 " + selectedCurrency1.currencyname + " = " + finalExchangeRate_roundTo10000 + " " + selectedCurrency2.currencyname;
                     }
                     else {
