@@ -1,0 +1,90 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Currency Exchange Rate</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js"></script>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" />
+</head>
+<body class="container-fluid">
+    <div class="container">
+        <!--Here where the Angular app starts, I assigned a controller to the app-->
+        <div ng-app="appA1" ng-controller="currencyController">
+            <div class="col-sm-12">
+                <label class="control-label col-sm-3">Current Currency: </label>
+                <!--
+                    Have created first dropdown list and assigned a model for hold the selected item.
+                    It fills with currencies from JSON datasource and gets sorted by angular orderBy filter.
+                    On any item selection change it calls a action handler from angular app named getExchangeRate, which calculates the exchange rate
+                -->
+                <div class="col-sm-8">
+                    <select class="form-control" ng-model="selectedCurrency1" ng-options="x.currencyname for x in currencies | orderBy:'currencyname'" ng-change="getExchangeRate()"></select>
+                </div>
+                <br /><br />
+                <!--
+                    Have created the second dropdown list and assigned a model but with different name.
+                    It fills with currencies from JSON datasource just like the other dropdown.
+                    On any item selection change this dropdown list will call the same handler as the other one.
+                -->
+                <label class="control-label col-sm-3">New Currency: </label>
+                <div class="col-sm-9">
+                    <select class="form-control" ng-model="selectedCurrency2" ng-options="x.currencyname for x in currencies | orderBy:'currencyname'" ng-change="getExchangeRate()"></select>
+                </div>
+                <br /><br />
+                <!--
+                    Here will show the exchange rate which has been calculated in getExchangeRate handler and assigned the result to a model named exchangeRate.
+                -->
+                <label class="control-label col-sm-3">Exchange Rate: </label>
+                <div class="col-sm-9">
+                    <input class="form-control" ng-model="exchangeRate" ng-disabled="true">
+                </div>
+            </div>
+        </div>
+        <script>
+            //Starting point of the angular app
+            var appA1 = angular.module("appA1", []);
+
+            //creating a controller to hold this app's contents and injecting $http into the handler function to use it later for API calls.
+            appA1.controller('currencyController', function ($scope, $http) {
+                //calling latest exchange rate API on remote server and assigning the return JSON data as an array to a variable which will be used as a source of exchange rate in the program.
+                $http.get("https://api.fixer.io/latest").then(function (response) {
+                    $scope.latestExchangeRates = response.data.rates;
+                });
+                //reading a file containing all avalible currencies,
+                //I have extracted these contents from fixer.com website and put them in an excel file and made a JSON type content to be able to use it as a object datasource for the dropdown lists.
+                //I could have used database to save these data and use a c# model, but didn't have time and didn't find it necessary, because desired result could be achieved just with angularJS without using .net environment.
+                $http.get("../exchangeRateContent/currencies.html").then(function (response) {
+                    $scope.currencies = response.data.currencies;
+                });
+                //this function will handel the exchange rate calculation and will be triggered evertime either dropdown lists change
+                $scope.getExchangeRate = function (x) {
+                    //it gets the first dropdown selected item through the model which have been assigned to it
+                    var selectedCurrency1 = $scope.selectedCurrency1;
+                    //it gets the second dropdown selected item through the model which have been assigned to it
+                    var selectedCurrency2 = $scope.selectedCurrency2;
+                    //if both dropdown lists have a valid selected item then we start the calculation proccess, otherwise exit the function or show a message if needed.
+                    if ((selectedCurrency1) && (selectedCurrency2)) {
+                        //assigns the latest exchange rate to a variable(to work around it easier) that have been retrieved from the API earlier.
+                        var rates = $scope.latestExchangeRates;
+                        //gets the first exchange rate from the exchange array by accessing the value of the seleceted item in first dropdown list
+                        //because the selected item is an object we can easily access its value by using selectedCurrency1.currency
+                        var EUR_CurrencyRate1 = rates[selectedCurrency1.currency];
+                        //gets the second exchange rate like the first one
+                        var EUR_CurrencyRate2 = rates[selectedCurrency2.currency];
+                        //calculating the exchange rate from dropdown 1 to dropdown 2
+                        var exchangeRate = (1 / EUR_CurrencyRate1) * EUR_CurrencyRate2;
+                        //round the calculated exchange rate to 0.0001 to make it more convenient to read.
+                        var finalExchangeRate_roundTo10000 = Math.round(exchangeRate * 10000) / 10000;
+                        //assining the final calculated exchange rate to a model which will be shown in on the user.
+                        $scope.exchangeRate = " 1 " + selectedCurrency1.currencyname + " = " + finalExchangeRate_roundTo10000 + " " + selectedCurrency2.currencyname;
+                    }
+                    else {
+                        //$scope.exchangeRate = ""
+                    }
+                };
+            });
+        </script>
+    </div>
+</body>
+</html>
